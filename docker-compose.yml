@@ -1,0 +1,9 @@
+services:
+  spark-test:
+    build:
+      context: .
+    container_name: spark-test-runner
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: python3 -m unittest discover -s tests -v
