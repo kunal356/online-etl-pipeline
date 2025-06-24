@@ -20,3 +20,16 @@ def add_features(df: DataFrame) -> DataFrame:
     df = is_UK_customer(df)
     df = extract_date(df)
     return df
+
+
+def comupte_gold_transformation(df: DataFrame, base_path: str, n: int = 10):
+    tasks = [("revenue_by_month", revenue_by_month),
+             ("top_n_products", lambda df,
+              path: top_n_products(df=df, n=n, path=path)),
+             ("sales_by_country", sales_by_country),
+             ("revenue_per_customer", revenue_per_customer)
+             ]
+
+    for folder, func in tasks:
+        path = f"{base_path}/{folder}"
+        func(df=df, path=path)

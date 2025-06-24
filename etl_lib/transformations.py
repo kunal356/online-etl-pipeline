@@ -1,6 +1,7 @@
 from pyspark.sql.functions import *
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType, IntegerType
+from etl_lib.io import *
 
 
 def rename_column(df, curr_col_name, new_col_name) -> DataFrame:
@@ -51,3 +52,40 @@ def is_return(df: DataFrame) -> DataFrame:
 
 def is_UK_customer(df: DataFrame) -> DataFrame:
     return df.withColumn("IsUKCustomer", when(col("Country") == "United Kingdom", True).otherwise(False))
+
+
+def revenue_by_month(df: DataFrame, path: str, mode: str = "overwrite") -> None:
+    df = (
+        df.groupBy("InvoiceYear", "InvoiceMonth")
+        .agg(sum("TotalPrice").alias("TotalRevenue"))
+        .orderBy("InvoiceYear", "InvoiceMonth")
+    )
+    write_to_adls(df, path=path, mode=mode)
+
+
+def top_n_products(df: DataFrame, n: int, path: str, mode: str = "overwrite") -> None:
+    df = (
+        df.groupBy("Description")
+        .agg(sum("Quantity")).alias("TotalSold")
+        .orderBy("TotalSold", ascending=False)
+        .limit(n)
+    )
+    write_to_adls(df, path=path, mode=mode)
+
+
+def sales_by_country(df: DataFrame, path: str, mode: str = "overwrite") -> None:
+    df = (
+        df.groupBy("Country")
+        .agg(sum("TotalPrice").alias("Revenue"))
+        .orderBy("Revenue", ascending=False)
+    )
+    write_to_adls(df, path=path, mode=mode)
+
+
+def revenue_per_customer(df: DataFrame, path: str, mode: str = "overwrite") -> None:
+    df = (
+        df.groupBy("CustomerID")
+        .agg(sum("TotalPrice").alias("CustomerRevenue"))
+        .orderBy("CustomerRevenue", ascending=False)
+    )
+    write_to_adls(df, path=path, mode=mode)
