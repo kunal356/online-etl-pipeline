@@ -1,9 +1,8 @@
 from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
-spark = SparkSession()
 
 
-def read_csv_from_adls(path) -> DataFrame:
+def read_csv_from_adls(path, spark) -> DataFrame:
     return spark.read.option("header", "true").csv(path)
 
 

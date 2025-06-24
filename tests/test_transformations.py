@@ -3,6 +3,7 @@ import unittest
 from pyspark.sql import SparkSession
 from etl_lib.transformations import *
 from pyspark.sql.functions import col
+from utils.env_utils import get_spark_session
 
 logging.basicConfig(level=logging.INFO,
                     format='%(levelname)s:%(name)s: %(message)s')
@@ -13,11 +14,7 @@ class TestTransformation(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.spark = SparkSession\
-            .builder\
-            .master("local[*]")\
-            .appName("TestTransformation")\
-            .getOrCreate()
+        cls.spark = get_spark_session()
         logger.info("\nSpark Session Started")
 
     def test_capitalize_first_letter(self):
