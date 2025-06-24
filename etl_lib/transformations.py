@@ -1,5 +1,19 @@
 from pyspark.sql.functions import *
 from pyspark.sql import DataFrame
+from pyspark.sql.types import DoubleType, IntegerType
+
+
+def rename_column(df, curr_col_name, new_col_name) -> DataFrame:
+    return df.withColumnRenamed(curr_col_name, new_col_name)
+
+
+def clean_and_cast_columns(df):
+    return (
+        df.withColumn("Quantity", col("Quantity").cast(IntegerType()))
+        .withColumn("Price", col("Price").cast(DoubleType()))
+        .withColumn("InvoiceDate", expr("substring(InvoiceDate, 1, 26)"))
+        .withColumn("InvoiceDate", to_timestamp("InvoiceDate", "yyyy-MM-dd HH:mm:ss.SSSSSS"))
+    )
 
 
 def remove_invalid_columns(df: DataFrame, col_name: str) -> DataFrame:
