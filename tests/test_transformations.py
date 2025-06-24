@@ -81,7 +81,7 @@ class TestTransformation(unittest.TestCase):
         logger.info("Testing: IsReturn")
         df = self.spark.createDataFrame(
             [(0,), (100,), (-1,), (10,), (1,)], ["Quantity"])
-        result_df = isReturn(df)
+        result_df = is_return(df)
         result = [row["IsReturn"] for row in result_df.collect()]
         try:
             self.assertEqual(result, [False, False, True, False, False])
@@ -93,7 +93,7 @@ class TestTransformation(unittest.TestCase):
         logger.info("Testing: isUKCustomer")
         df = self.spark.createDataFrame(
             [("United Kingdom",), ("United States",), ("Germany",), ("Australia",), ("United Kingdom",)], ["Country"])
-        result_df = isUKCustomer(df)
+        result_df = is_UK_customer(df)
         result = [row["IsUKCustomer"] for row in result_df.collect()]
         try:
             self.assertEqual(result, [True, False, False, False, True])

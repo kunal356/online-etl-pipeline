@@ -30,10 +30,10 @@ def extract_date(df: DataFrame) -> DataFrame:
         .withColumn("InvoiceTime", date_format("InvoiceDate", "HH:mm:ss"))
 
 
-def isReturn(df: DataFrame) -> DataFrame:
+def is_return(df: DataFrame) -> DataFrame:
     return df.withColumn("IsReturn", when(col("Quantity") < 0, True).otherwise(False)) \
 
 
 
-def isUKCustomer(df: DataFrame) -> DataFrame:
+def is_UK_customer(df: DataFrame) -> DataFrame:
     return df.withColumn("IsUKCustomer", when(col("Country") == "United Kingdom", True).otherwise(False))
