@@ -65,6 +65,42 @@ class TestTransformation(unittest.TestCase):
         except AssertionError as e:
             logger.error(f"Test 4 Failed with error: {e}")
 
+    def test_remove_invalid_columns(self):
+        logger.info("Testing: Remove Invalid Columns")
+        df = self.spark.createDataFrame(
+            [(1,), (-2,), (100,), (0,), (1300,)], ["Price"])
+        result_df = remove_invalid_columns(df, "Price")
+        result = [row["Price"] for row in result_df.collect()]
+        try:
+            self.assertEqual(result, [1, 100, 1300])
+            logger.info("Test 5: Passed")
+        except AssertionError as e:
+            logger.error(f"Test 5 Failed with error: {e}")
+
+    def test_isReturn(self):
+        logger.info("Testing: IsReturn")
+        df = self.spark.createDataFrame(
+            [(0,), (100,), (-1,), (10,), (1,)], ["Quantity"])
+        result_df = isReturn(df)
+        result = [row["IsReturn"] for row in result_df.collect()]
+        try:
+            self.assertEqual(result, [False, False, True, False, False])
+            logger.info("Test 6 Passed")
+        except AssertionError as e:
+            logger.error(f"Test 6 Failed with error: {e}")
+
+    def test_isUKCustomer(self):
+        logger.info("Testing: isUKCustomer")
+        df = self.spark.createDataFrame(
+            [("United Kingdom",), ("United States",), ("Germany",), ("Australia",), ("United Kingdom",)], ["Country"])
+        result_df = isUKCustomer(df)
+        result = [row["IsUKCustomer"] for row in result_df.collect()]
+        try:
+            self.assertEqual(result, [True, False, False, False, True])
+            logger.info("Test 7 Passed")
+        except AssertionError as e:
+            logger.error(f"Test 7 Failed with error: {e}")
+
     @classmethod
     def tearDownClass(cls):
         cls.spark.stop()
