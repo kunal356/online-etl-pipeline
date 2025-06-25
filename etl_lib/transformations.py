@@ -67,7 +67,7 @@ def top_n_products(df: DataFrame, n: int, path: str, mode: str = "overwrite") ->
     df = (
         df.groupBy("Description")
         .agg(sum("Quantity").alias("TotalSold"))
-        .orderBy("TotalSold", ascending=False)
+        .orderBy(col("TotalSold").desc())
         .limit(n)
     )
     write_to_adls(df, path=path, mode=mode)
