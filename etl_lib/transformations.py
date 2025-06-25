@@ -66,7 +66,7 @@ def revenue_by_month(df: DataFrame, path: str, mode: str = "overwrite") -> None:
 def top_n_products(df: DataFrame, n: int, path: str, mode: str = "overwrite") -> None:
     df = (
         df.groupBy("Description")
-        .agg(sum("Quantity")).alias("TotalSold")
+        .agg(sum("Quantity").alias("TotalSold"))
         .orderBy("TotalSold", ascending=False)
         .limit(n)
     )
