@@ -22,12 +22,11 @@ def remove_invalid_columns(df: DataFrame, col_name: str) -> DataFrame:
 
 
 def capitalize_first_letter(df: DataFrame, col_name: str) -> DataFrame:
-    return df \
-        .withColumn(
-            col_name,
-            expr(
-                f"concat(upper(substring(trim({col_name}), 1, 1)), lower(substring(trim({col_name}), 2)))")
-        )
+    return df.withColumn(
+        col_name,
+        expr(
+            f"concat(upper(substring(trim({col_name}), 1, 1)), lower(substring(trim({col_name}), 2)))")
+    )
 
 
 def cap_every_first_letter(df: DataFrame, col_name: str) -> DataFrame:
@@ -64,20 +63,29 @@ def revenue_by_month(df: DataFrame, path: str, mode: str = "overwrite") -> None:
 
 
 def top_n_products(df: DataFrame, n: int, path: str, mode: str = "overwrite") -> None:
-    grouped_df = df.groupBy("Description").agg(
-        sum("Quantity").alias("TotalSold"))
-    df = grouped_df.orderBy("TotalSold", ascending=False).limit(n)
+    df = (
+        df.groupBy("Description")
+        .agg(sum("Quantity").alias("TotalSold"))
+        .orderBy("TotalSold", ascending=False)
+        .limit(n)
+    )
     write_to_adls(df, path=path, mode=mode)
 
 
 def sales_by_country(df: DataFrame, path: str, mode: str = "overwrite") -> None:
-    grouped_df = df.groupBy("Country").agg(sum("TotalPrice").alias("Revenue"))
-    df = grouped_df.orderBy("Revenue", ascending=False)
+    df = (
+        df.groupBy("Country")
+        .agg(sum("TotalPrice").alias("Revenue"))
+        .orderBy("Revenue", ascending=False)
+    )
+
     write_to_adls(df, path=path, mode=mode)
 
 
 def revenue_per_customer(df: DataFrame, path: str, mode: str = "overwrite") -> None:
-    grouped_df = df.groupBy("CustomerID").agg(
-        sum("TotalPrice").alias("CustomerRevenue"))
-    df = grouped_df.orderBy("CustomerRevenue", ascending=False)
+    df = (
+        df.groupBy("CustomerID")
+        .agg(sum("TotalPrice").alias("CustomerRevenue"))
+        .orderBy("CustomerRevenue", ascending=False)
+    )
     write_to_adls(df, path=path, mode=mode)
