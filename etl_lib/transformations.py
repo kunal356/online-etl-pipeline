@@ -2,19 +2,69 @@ from pyspark.sql.functions import *
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType, IntegerType
 from etl_lib.io import *
+import logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(levelname)s:%(name)s: %(message)s')
+
+logger = logging.getLogger(__name__)
 
 
 def rename_column(df, curr_col_name, new_col_name) -> DataFrame:
     return df.withColumnRenamed(curr_col_name, new_col_name)
 
 
-def clean_and_cast_columns(df):
-    return (
+def clean_and_cast_columns(df: DataFrame, raise_on_parse_failure: bool = False):
+    # Check for required columns
+    required_columns = {"Quantity", "Price", "InvoiceDate"}
+    missing_cols = required_columns - set(df.columns)
+    if missing_cols:
+        error_msg = f"Missing requried columns: {', '.join(missing_cols)}"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+    # Different Date Formats
+    date_formats = [
+        "yyyy-MM-dd HH:mm:ss.SSSSSS",   # With milliseconds
+        "dd-MM-yyyy HH:mm:ss.SSSSSS",  # With milliseconds
+        "dd/MM/yyyy HH:mm:ss.SSSSSS",  # With milliseconds
+        "yyyy-MM-dd HH:mm:ss",        # Without milliseconds
+        "yyyy/MM/dd HH:mm:ss",
+        "MM-dd-yyyy HH:mm:ss",
+        "MM/dd/yyyy HH:mm:ss",
+        "dd-MM-yyyy h:mm:ss a",       # For "01-12-2010 8:26:00 AM" (AM/PM)
+        "yyyy-MM-dd",                 # Date only
+        "MM-dd-yyyy",                 # Date only
+    ]
+
+    logger.info("Attempting to parse Invoice Date Column using multiple formats")
+    timestamp_exprs = [to_timestamp(
+        col("InvoiceDate"), fmt) for fmt in date_formats]
+
+    parsed_timestamp = coalesce(*timestamp_exprs)
+    # Add None if date parsing failed
+    if raise_on_parse_failure:
+        parsed_timestamp = when(
+            parsed_timestamp.isNotNull(), parsed_timestamp
+        ).otherwise(
+            None
+        )
+    # Force Fail using the following code:
+    # if raise_on_parse_failure:
+    #     null_count = df_transformed.filter(col("InvoiceDate").isNull()).count()
+    # if null_count > 0:
+    #     error_msg = f"{null_count} rows could not parse InvoiceDate."
+    #     logger.error(error_msg)
+    #     raise ValueError(error_msg)
+
+    df_transformed = (
         df.withColumn("Quantity", col("Quantity").cast(IntegerType()))
         .withColumn("Price", col("Price").cast(DoubleType()))
-        .withColumn("InvoiceDate", expr("substring(InvoiceDate, 1, 26)"))
-        .withColumn("InvoiceDate", to_timestamp("InvoiceDate", "yyyy-MM-dd HH:mm:ss.SSSSSS"))
+        .withColumn(
+            "InvoiceDate", parsed_timestamp
+        )
+
     )
+    return df_transformed
 
 
 def remove_invalid_columns(df: DataFrame, col_name: str) -> DataFrame:
