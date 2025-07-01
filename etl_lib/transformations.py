@@ -2,11 +2,9 @@ from pyspark.sql.functions import *
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType, IntegerType
 from etl_lib.io import *
-import logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(levelname)s:%(name)s: %(message)s')
+from utils.env_utils import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def rename_column(df, curr_col_name, new_col_name) -> DataFrame:
@@ -100,7 +98,9 @@ def is_return(df: DataFrame) -> DataFrame:
 
 
 def is_UK_customer(df: DataFrame) -> DataFrame:
-    return df.withColumn("IsUKCustomer", when(col("Country") == "United Kingdom", True).otherwise(False))
+    uk_variations = ["United Kingdom", "UK", "Uk", "England",
+                     "Scotland", "Wales", "Northern Ireland"]
+    return df.withColumn("IsUKCustomer", when(col("Country").isin(uk_variations), True).otherwise(False))
 
 
 def revenue_by_month(df: DataFrame, path: str, mode: str = "overwrite") -> None:

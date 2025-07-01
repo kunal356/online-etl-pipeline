@@ -1,51 +1,34 @@
-import logging
-import unittest
-from pyspark.sql import SparkSession
+from base_test import BaseTestClass
 from etl_lib.transformations import *
 from pyspark.sql.functions import col
-from utils.env_utils import get_spark_session
-
-logging.basicConfig(level=logging.INFO,
-                    format='%(levelname)s:%(name)s: %(message)s')
-logger = logging.getLogger(__name__)
+from utils.env_utils import get_spark_session, get_logger
 
 
-class TestTransformation(unittest.TestCase):
+logger = get_logger(__name__)
 
-    @classmethod
-    def setUpClass(cls):
-        cls.spark = get_spark_session()
-        logger.info("\nSpark Session Started")
+
+class TestTransformation(BaseTestClass):
 
     def test_capitalize_first_letter(self):
         logger.info("\nTesting: capitalize_first_letter")
         df = self.spark.createDataFrame([(" hello world ",)], ["desc"])
         result_df = capitalize_first_letter(df, "desc")
-        try:
-            self.assertEqual(result_df.collect()[0]["desc"], "Hello world")
-            logger.info("Test 1: Passed")
-        except AssertionError as e:
-            logger.error(f" Test 1 Failed with error: {e}")
+        self.assertEqual(result_df.collect()[0]["desc"], "Hello world")
+        logger.info("Test 1: Passed")
 
     def test_cap_every_first_letter(self):
         logger.info("Testing: cap_every_first letter")
         df = self.spark.createDataFrame([("hello world",)], ["desc"])
         result = cap_every_first_letter(df, "desc").collect()[0]["desc"]
-        try:
-            self.assertEqual(result, "Hello World")
-            logger.info("Test 2: Passed")
-        except AssertionError as e:
-            logger.error(f"Test 2 Failed with error: {e}")
+        self.assertEqual(result, "Hello World")
+        logger.info("Test 2: Passed")
 
     def test_calc_total_price(self):
         logger.info("Testing: calc_total_price")
         df = self.spark.createDataFrame([(2, 3.456)], ["Quantity", "Price"])
         result = calc_total_price(df).collect()[0]["TotalPrice"]
-        try:
-            self.assertEqual(result, 6.91)
-            logger.info("Test 3: Passed")
-        except AssertionError as e:
-            logger.error(f"Test 3 Failed with error: {e}")
+        self.assertEqual(result, 6.91)
+        logger.info("Test 3: Passed")
 
     def test_extract_date(self):
         logger.info("Testing: extract_date")
@@ -53,14 +36,11 @@ class TestTransformation(unittest.TestCase):
             [("2024-06-11 13:45:00",)], ["InvoiceDate"])
         df = df.withColumn("InvoiceDate", col("InvoiceDate").cast("timestamp"))
         result = extract_date(df).collect()[0]
-        try:
-            self.assertEqual(result["InvoiceYear"], 2024)
-            self.assertEqual(result["InvoiceMonth"], 6)
-            self.assertEqual(result["InvoiceDay"], 11)
-            self.assertEqual(result["InvoiceTime"], "13:45:00")
-            logger.info("Test 4: Passed")
-        except AssertionError as e:
-            logger.error(f"Test 4 Failed with error: {e}")
+        self.assertEqual(result["InvoiceYear"], 2024)
+        self.assertEqual(result["InvoiceMonth"], 6)
+        self.assertEqual(result["InvoiceDay"], 11)
+        self.assertEqual(result["InvoiceTime"], "13:45:00")
+        logger.info("Test 4: Passed")
 
     def test_remove_invalid_columns(self):
         logger.info("Testing: Remove Invalid Columns")
@@ -68,11 +48,8 @@ class TestTransformation(unittest.TestCase):
             [(1,), (-2,), (100,), (0,), (1300,)], ["Price"])
         result_df = remove_invalid_columns(df, "Price")
         result = [row["Price"] for row in result_df.collect()]
-        try:
-            self.assertEqual(result, [1, 100, 1300])
-            logger.info("Test 5: Passed")
-        except AssertionError as e:
-            logger.error(f"Test 5 Failed with error: {e}")
+        self.assertEqual(result, [1, 100, 1300])
+        logger.info("Test 5: Passed")
 
     def test_isReturn(self):
         logger.info("Testing: IsReturn")
@@ -80,11 +57,8 @@ class TestTransformation(unittest.TestCase):
             [(0,), (100,), (-1,), (10,), (1,)], ["Quantity"])
         result_df = is_return(df)
         result = [row["IsReturn"] for row in result_df.collect()]
-        try:
-            self.assertEqual(result, [False, False, True, False, False])
-            logger.info("Test 6 Passed")
-        except AssertionError as e:
-            logger.error(f"Test 6 Failed with error: {e}")
+        self.assertEqual(result, [False, False, True, False, False])
+        logger.info("Test 6 Passed")
 
     def test_isUKCustomer(self):
         logger.info("Testing: isUKCustomer")
@@ -92,13 +66,6 @@ class TestTransformation(unittest.TestCase):
             [("United Kingdom",), ("United States",), ("Germany",), ("Australia",), ("United Kingdom",)], ["Country"])
         result_df = is_UK_customer(df)
         result = [row["IsUKCustomer"] for row in result_df.collect()]
-        try:
-            self.assertEqual(result, [True, False, False, False, True])
-            logger.info("Test 7 Passed")
-        except AssertionError as e:
-            logger.error(f"Test 7 Failed with error: {e}")
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.spark.stop()
-        logger.info("Spark session stopped")
+        self.assertEqual(result, [True, False, False, False, True])
+        logger.info("Test 7 Passed")
